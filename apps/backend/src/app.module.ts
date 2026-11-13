@@ -7,6 +7,7 @@ import { AuditModule } from './common/audit/audit.module';
 import { SedesModule } from './sedes/sedes.module';
 import { AlmacenModule } from './almacen/almacen.module';
 import { SistemasModule } from './sistemas/sistemas.module';
+import { FarmaciaModule } from './farmacia/farmacia.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SistemasModule } from './sistemas/sistemas.module';
     SedesModule,
     AlmacenModule,
     SistemasModule,
+    FarmaciaModule,
   ],
 })
 export class AppModule {}
