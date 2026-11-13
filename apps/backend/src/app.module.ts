@@ -8,6 +8,8 @@ import { SedesModule } from './sedes/sedes.module';
 import { AlmacenModule } from './almacen/almacen.module';
 import { SistemasModule } from './sistemas/sistemas.module';
 import { FarmaciaModule } from './farmacia/farmacia.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { FarmaciaModule } from './farmacia/farmacia.module';
     AlmacenModule,
     SistemasModule,
     FarmaciaModule,
+    DashboardModule,
+    ReportsModule,
   ],
 })
 export class AppModule {}
