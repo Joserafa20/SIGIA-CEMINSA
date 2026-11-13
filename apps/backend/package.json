@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "prisma:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
+    "prisma:generate": "npx prisma@5 generate --schema=../../packages/database/prisma/schema.prisma",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "dev": "nest start --watch",
