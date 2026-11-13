@@ -28,26 +28,27 @@
 
 ---
 
-## 🔄 En Progreso
+## ✅ Fase 1 — SDD y Arquitectura (COMPLETADA)
+- Prisma schema completo: 20 modelos, 3 módulos, RBAC completo
+- docker-compose.yml: PostgreSQL 16 + MinIO + backend + frontend
+- Modelo de datos documentado con diagramas
+- Seed de datos de prueba anonimizados (11 sedes, usuarios por rol)
 
-### Fase 1 — SDD y Arquitectura
-- Prisma schema (modelo de datos) → archivo `packages/database/prisma/schema.prisma`
-- Diagrama ER en texto
-- API contracts básicos
-- docker-compose.yml
+## ✅ Fase 2 — Infraestructura y Seguridad (COMPLETADA)
+- NestJS bootstrap con Swagger, ValidationPipe, CORS
+- JWT + argon2 (hash seguro)
+- RolesGuard + decoradores @Roles, @Modules, @Audit, @CurrentUser
+- AuditService + AuditInterceptor (log inmutable)
+- HttpExceptionFilter (errores estandarizados)
+- UsersModule con RBAC
+- Next.js 14 App Router
+- Página de login institucional (zod + react-hook-form)
+- NextAuth.js con CredentialsProvider
+- Cliente axios con interceptor de tokens automático
 
 ---
 
-## ⏳ Pendiente (próxima sesión si se interrumpe aquí)
-
-1. Completar `packages/database/prisma/schema.prisma` con todos los modelos
-2. Crear `docker-compose.yml` funcional
-3. Crear `.env.example`
-4. Bootstrap NestJS en `apps/backend/`
-5. Bootstrap Next.js en `apps/frontend/`
-6. Configurar pnpm workspaces en `package.json` raíz
-7. Implementar autenticación JWT en backend
-8. Implementar RBAC básico
+## 🔄 Fase Siguiente: Fase 3 — Módulo Almacén
 
 ---
 
@@ -55,15 +56,15 @@
 
 ```
 Directorio: C:\Users\LENOVO\Desktop\test\SIGIA-CEMINSA
-Rama activa: develop
-Fase actual: 1 (SDD y Arquitectura)
-Siguiente paso: Completar Prisma schema y docker-compose.yml
+Rama activa: develop (d45a319)
+Fase siguiente: 3 (Módulo Almacén)
 ```
 
 Verificar antes de reanudar:
-1. `git status` — confirmar que el commit inicial está en develop
-2. `git log --oneline -5` — ver estado del historial
-3. Continuar desde "Fase 1 — Prisma schema" en TASKS.md
+1. `git checkout develop && git pull origin develop`
+2. Crear rama: `git checkout -b feature/fase-3-almacen`
+3. Implementar módulo Almacén en backend
+4. Implementar UI de Almacén en frontend
 
 ---
 

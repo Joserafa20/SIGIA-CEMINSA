@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 248 250 252;
+    --foreground: 30 41 59;
+    --card: 255 255 255;
+    --card-foreground: 30 41 59;
+    --primary: 30 58 95;
+    --primary-foreground: 255 255 255;
+    --secondary: 45 125 210;
+    --secondary-foreground: 255 255 255;
+    --muted: 244 246 249;
+    --muted-foreground: 107 114 128;
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 45 125 210;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
