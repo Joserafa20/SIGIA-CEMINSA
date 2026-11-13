@@ -1,0 +1,31 @@
+{
+  "name": "sigia-ceminsa",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Sistema Integral de Gestión de Inventarios y Activos — ESE CEMINSA",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter backend build && pnpm --filter frontend build",
+    "test": "pnpm --filter backend test && pnpm --filter frontend test",
+    "test:e2e": "pnpm --filter frontend test:e2e",
+    "db:migrate": "pnpm --filter database migrate:dev",
+    "db:seed": "pnpm --filter database seed",
+    "db:studio": "pnpm --filter database studio",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.14.2"
+}

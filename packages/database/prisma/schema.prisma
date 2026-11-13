@@ -1,0 +1,521 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMERACIONES
+// ============================================================
+
+enum Module {
+  ALMACEN
+  FARMACIA
+  SISTEMAS
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN_TIC
+  ALMACENISTA
+  REGENTE_FARMACIA
+  TECNICO_SISTEMAS
+  RESPONSABLE_SEDE
+  CONTROL_INTERNO
+  CONTABILIDAD
+  SOLICITANTE
+}
+
+enum AssetStatus {
+  EXCELENTE
+  BUENO
+  REGULAR
+  MALO
+  BAJA
+  EN_TRANSITO
+}
+
+enum AssetType {
+  TANGIBLE
+  INTANGIBLE
+}
+
+enum MovementType {
+  ENTRADA_COMPRA
+  ENTRADA_DONACION
+  ENTRADA_TRASLADO
+  SALIDA_AUTORIZADA
+  SALIDA_BAJA
+  SALIDA_TRASLADO
+  AJUSTE_POSITIVO
+  AJUSTE_NEGATIVO
+  TRANSFERENCIA_DESPACHO
+  TRANSFERENCIA_RECEPCION
+}
+
+enum TransferStatus {
+  DESPACHADO
+  EN_TRANSITO
+  RECIBIDO
+  RECHAZADO
+}
+
+enum TicketStatus {
+  ABIERTO
+  EN_PROGRESO
+  RESUELTO
+  CERRADO
+  CANCELADO
+}
+
+enum TicketPriority {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum MaintenanceType {
+  PREVENTIVO
+  CORRECTIVO
+}
+
+enum ProductCategory {
+  MEDICAMENTO
+  DISPOSITIVO_MEDICO
+  REACTIVO
+  INSUMO_ODONTOLOGICO
+  INSUMO_ASISTENCIAL
+}
+
+enum StockMovementType {
+  ENTRADA
+  SALIDA
+  AJUSTE_POSITIVO
+  AJUSTE_NEGATIVO
+  TRASLADO_ENTRADA
+  TRASLADO_SALIDA
+  VENCIMIENTO
+  CUARENTENA
+}
+
+enum LotStatus {
+  DISPONIBLE
+  CUARENTENA
+  VENCIDO
+  AGOTADO
+}
+
+// ============================================================
+// ENTIDADES BASE
+// ============================================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  documentId   String?  @unique
+  phone        String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roles         UserRole[]
+  sedeAccess    UserSedeAccess[]
+  auditLogs     AuditLog[]
+  createdAssets Asset[]              @relation("AssetCreator")
+  assignedAssets TechAsset[]         @relation("AssetAssignee")
+  requestedMovements AssetMovement[] @relation("MovementRequester")
+  authorizedMovements AssetMovement[] @relation("MovementAuthorizer")
+  deliveredMovements AssetMovement[] @relation("MovementDeliverer")
+  receivedMovements AssetMovement[]  @relation("MovementReceiver")
+  tickets        Ticket[]            @relation("TicketCreator")
+  assignedTickets Ticket[]           @relation("TicketAssignee")
+  maintenances   Maintenance[]       @relation("MaintenanceTechnician")
+
+  @@map("users")
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  role   Role
+  module Module?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, role, module])
+  @@map("user_roles")
+}
+
+model Sede {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  address     String?
+  municipality String?
+  department  String?
+  phone       String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  userAccess    UserSedeAccess[]
+  assets        Asset[]
+  techAssets    TechAsset[]
+  stockEntries  StockEntry[]
+  productStock  ProductStock[]
+  transfersFrom Transfer[]      @relation("TransferOrigin")
+  transfersTo   Transfer[]      @relation("TransferDestination")
+
+  @@map("sedes")
+}
+
+model UserSedeAccess {
+  id     String @id @default(cuid())
+  userId String
+  sedeId String
+  module Module
+
+  user User @relation(fields: [userId], references: [id])
+  sede Sede @relation(fields: [sedeId], references: [id])
+
+  @@unique([userId, sedeId, module])
+  @@map("user_sede_access")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  module     Module
+  action     String
+  entityType String
+  entityId   String
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// ============================================================
+// MÓDULO ALMACÉN
+// ============================================================
+
+model AssetCategory {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  description String?
+  assetType   AssetType
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  assets Asset[]
+
+  @@map("asset_categories")
+}
+
+model Asset {
+  id             String      @id @default(cuid())
+  institutionalCode String?  @unique
+  plaque         String?     @unique
+  name           String
+  description    String?
+  brand          String?
+  model          String?
+  serial         String?
+  invima         String?
+  categoryId     String
+  sedeId         String
+  status         AssetStatus @default(BUENO)
+  initialValue   Decimal?    @db.Decimal(15, 2)
+  currentValue   Decimal?    @db.Decimal(15, 2)
+  acquisitionDate DateTime?
+  usefulLifeYears Int?
+  observations   String?
+  createdById    String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  category   AssetCategory @relation(fields: [categoryId], references: [id])
+  sede       Sede          @relation(fields: [sedeId], references: [id])
+  createdBy  User          @relation("AssetCreator", fields: [createdById], references: [id])
+  movements  AssetMovement[]
+  techAsset  TechAsset?
+  documents  Document[]
+
+  @@map("assets")
+}
+
+model AssetMovement {
+  id              String       @id @default(cuid())
+  assetId         String
+  movementType    MovementType
+  quantity        Decimal      @db.Decimal(10, 3)
+  previousValue   Decimal?     @db.Decimal(15, 2)
+  newValue        Decimal?     @db.Decimal(15, 2)
+  requestedById   String
+  authorizedById  String?
+  deliveredById   String?
+  receivedById    String?
+  transferId      String?
+  documentRef     String?
+  notes           String?
+  createdAt       DateTime     @default(now())
+
+  asset         Asset     @relation(fields: [assetId], references: [id])
+  requestedBy   User      @relation("MovementRequester", fields: [requestedById], references: [id])
+  authorizedBy  User?     @relation("MovementAuthorizer", fields: [authorizedById], references: [id])
+  deliveredBy   User?     @relation("MovementDeliverer", fields: [deliveredById], references: [id])
+  receivedBy    User?     @relation("MovementReceiver", fields: [receivedById], references: [id])
+  transfer      Transfer? @relation(fields: [transferId], references: [id])
+
+  @@map("asset_movements")
+}
+
+model Transfer {
+  id              String         @id @default(cuid())
+  originSedeId    String
+  destinationSedeId String
+  status          TransferStatus @default(DESPACHADO)
+  dispatchedAt    DateTime       @default(now())
+  receivedAt      DateTime?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  notes           String?
+  documentRef     String?
+
+  originSede      Sede           @relation("TransferOrigin", fields: [originSedeId], references: [id])
+  destinationSede Sede           @relation("TransferDestination", fields: [destinationSedeId], references: [id])
+  movements       AssetMovement[]
+
+  @@map("transfers")
+}
+
+// ============================================================
+// MÓDULO SISTEMAS
+// ============================================================
+
+model TechAsset {
+  id              String   @id @default(cuid())
+  assetId         String   @unique
+  sedeId          String
+  processor       String?
+  ramGb           Int?
+  storageGb       Int?
+  storageType     String?
+  operatingSystem String?
+  osVersion       String?
+  macAddress      String?
+  ipAddress       String?
+  warrantyExpiry  DateTime?
+  purchaseOrder   String?
+  assignedToId    String?
+  assignedAt      DateTime?
+  location        String?
+  qrCode          String?  @unique
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  asset        Asset    @relation(fields: [assetId], references: [id])
+  sede         Sede     @relation(fields: [sedeId], references: [id])
+  assignedTo   User?    @relation("AssetAssignee", fields: [assignedToId], references: [id])
+  licenses     License[]
+  maintenances Maintenance[]
+  tickets      Ticket[]
+
+  @@map("tech_assets")
+}
+
+model License {
+  id           String   @id @default(cuid())
+  techAssetId  String
+  productName  String
+  licenseKey   String?
+  vendor       String?
+  expiresAt    DateTime?
+  seats        Int?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  techAsset TechAsset @relation(fields: [techAssetId], references: [id])
+
+  @@map("licenses")
+}
+
+model Maintenance {
+  id              String          @id @default(cuid())
+  techAssetId     String
+  type            MaintenanceType
+  description     String
+  technicianId    String
+  scheduledDate   DateTime?
+  executedDate    DateTime?
+  nextScheduled   DateTime?
+  cost            Decimal?        @db.Decimal(10, 2)
+  findings        String?
+  workDone        String?
+  parts           String?
+  status          String          @default("PROGRAMADO")
+  createdAt       DateTime        @default(now())
+
+  techAsset   TechAsset @relation(fields: [techAssetId], references: [id])
+  technician  User      @relation("MaintenanceTechnician", fields: [technicianId], references: [id])
+  documents   Document[]
+
+  @@map("maintenances")
+}
+
+model Ticket {
+  id           String         @id @default(cuid())
+  techAssetId  String?
+  createdById  String
+  assignedToId String?
+  title        String
+  description  String
+  priority     TicketPriority @default(MEDIA)
+  status       TicketStatus   @default(ABIERTO)
+  resolution   String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  closedAt     DateTime?
+
+  techAsset  TechAsset? @relation(fields: [techAssetId], references: [id])
+  createdBy  User       @relation("TicketCreator", fields: [createdById], references: [id])
+  assignedTo User?      @relation("TicketAssignee", fields: [assignedToId], references: [id])
+
+  @@map("tickets")
+}
+
+// ============================================================
+// MÓDULO FARMACIA
+// ============================================================
+
+model Product {
+  id               String          @id @default(cuid())
+  code             String          @unique
+  activePrinciple  String
+  commercialName   String?
+  pharmaceuticalForm String?
+  presentation     String?
+  concentration    String?
+  category         ProductCategory
+  invima           String?
+  requiresLot      Boolean         @default(true)
+  requiresColdChain Boolean        @default(false)
+  isControlled     Boolean         @default(false)
+  isComodato       Boolean         @default(false)
+  minimumStock     Int             @default(0)
+  isActive         Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  lots         Lot[]
+  productStock ProductStock[]
+
+  @@map("products")
+}
+
+model Lot {
+  id          String    @id @default(cuid())
+  productId   String
+  lotNumber   String
+  expiresAt   DateTime?
+  status      LotStatus @default(DISPONIBLE)
+  quantity    Decimal   @db.Decimal(10, 3)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  product   Product          @relation(fields: [productId], references: [id])
+  movements StockMovement[]
+
+  @@unique([productId, lotNumber])
+  @@map("lots")
+}
+
+model ProductStock {
+  id        String  @id @default(cuid())
+  productId String
+  sedeId    String
+  quantity  Decimal @db.Decimal(10, 3) @default(0)
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  sede    Sede    @relation(fields: [sedeId], references: [id])
+
+  @@unique([productId, sedeId])
+  @@map("product_stock")
+}
+
+model StockEntry {
+  id              String   @id @default(cuid())
+  sedeId          String
+  documentRef     String?
+  supplier        String?
+  entryDate       DateTime @default(now())
+  totalValue      Decimal? @db.Decimal(15, 2)
+  notes           String?
+  createdById     String
+  authorizedById  String?
+  createdAt       DateTime @default(now())
+
+  sede      Sede           @relation(fields: [sedeId], references: [id])
+  movements StockMovement[]
+
+  @@map("stock_entries")
+}
+
+model StockMovement {
+  id              String            @id @default(cuid())
+  lotId           String?
+  stockEntryId    String?
+  movementType    StockMovementType
+  quantity        Decimal           @db.Decimal(10, 3)
+  unitValue       Decimal?          @db.Decimal(10, 2)
+  totalValue      Decimal?          @db.Decimal(15, 2)
+  sedeId          String?
+  destinationSedeId String?
+  requestedById   String?
+  authorizedById  String?
+  documentRef     String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+
+  lot        Lot?        @relation(fields: [lotId], references: [id])
+  stockEntry StockEntry? @relation(fields: [stockEntryId], references: [id])
+
+  @@map("stock_movements")
+}
+
+// ============================================================
+// DOCUMENTOS ADJUNTOS
+// ============================================================
+
+model Document {
+  id            String   @id @default(cuid())
+  module        Module
+  entityType    String
+  entityId      String
+  fileName      String
+  fileKey       String   @unique
+  mimeType      String
+  sizeBytes     Int
+  uploadedById  String?
+  createdAt     DateTime @default(now())
+
+  asset       Asset?       @relation(fields: [entityId], references: [id], map: "document_asset")
+  maintenance Maintenance? @relation(fields: [entityId], references: [id], map: "document_maintenance")
+
+  @@map("documents")
+}
