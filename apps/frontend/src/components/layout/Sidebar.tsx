@@ -39,8 +39,8 @@ const NAV_ITEMS: NavItem[] = [
     icon: Pill,
     children: [
       { label: 'Productos', href: '/farmacia/products' },
-      { label: 'Lotes', href: '/farmacia/lots' },
-      { label: 'Movimientos', href: '/farmacia/movements' },
+      { label: 'Ingreso stock', href: '/farmacia/stock/entry' },
+      { label: 'Dispensar', href: '/farmacia/stock/dispense' },
     ],
   },
   {
@@ -55,7 +55,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   { label: 'Sedes', href: '/sedes', icon: Building2 },
   { label: 'Usuarios', href: '/users', icon: Users },
-  { label: 'Reportes', href: '/reports', icon: FileText },
+  { label: 'Reportes', href: '/reportes', icon: FileText },
 ];
 
 export default function Sidebar() {
