@@ -69,6 +69,23 @@ Verificar antes de reanudar:
 
 ## Commits Realizados
 
-| Hash | Rama | Descripción |
-|------|------|-------------|
-| (pendiente push) | develop | feat: estructura inicial Fase 0 — auditoría y diagnóstico |
+| Hash | Rama | Descripción | Estado |
+|------|------|-------------|--------|
+| f171898 | develop | feat: Fase 0 completa — auditoría, estructura inicial y modelo de datos | ✅ Publicado en GitHub |
+
+## Próxima Sesión — Continuar desde aquí
+
+```
+Directorio: C:\Users\LENOVO\Desktop\test\SIGIA-CEMINSA
+Rama activa: develop
+Fase siguiente: 2 (Infraestructura y seguridad)
+```
+
+Instrucción para reanudar:
+1. `git checkout develop && git pull origin develop`
+2. Instalar pnpm: `npm install -g pnpm`
+3. Iniciar Fase 2: Bootstrap NestJS en apps/backend y Next.js en apps/frontend
+4. Verificar docker-compose.yml con `docker compose config`
+5. Ejecutar `docker compose up -d postgres minio`
+6. Configurar Prisma migrations iniciales
+
