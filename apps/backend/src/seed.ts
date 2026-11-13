@@ -36,21 +36,10 @@ async function main() {
   });
   console.log(`Usuario: ${admin.email}`);
 
-  // Rol SUPER_ADMIN
-  await prisma.userRole.upsert({
-    where: {
-      userId_role_module: {
-        userId: admin.id,
-        role: 'SUPER_ADMIN',
-        module: null,
-      },
-    },
-    update: {},
-    create: {
-      userId: admin.id,
-      role: 'SUPER_ADMIN',
-      module: null,
-    },
+  // Rol SUPER_ADMIN (module es null — usar createMany con skipDuplicates)
+  await prisma.userRole.createMany({
+    data: [{ userId: admin.id, role: 'SUPER_ADMIN', module: null }],
+    skipDuplicates: true,
   });
 
   // Acceso a sede (un registro por módulo)
