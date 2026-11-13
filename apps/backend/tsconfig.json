@@ -18,7 +18,8 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@sigia/*": ["../../packages/*/src"]
+      "@sigia/*": ["../../packages/*/src"],
+      "@prisma/client": ["../../packages/database/generated/client"]
     }
   }
 }

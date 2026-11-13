@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AssetStatus, LotStatus, TicketStatus, MaintenanceStatus } from '@prisma/client';
+import { AssetStatus, LotStatus, TicketStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -119,11 +119,10 @@ export class DashboardService {
         _count: { id: true },
       }),
       this.prisma.maintenance.count({
-        where: { status: MaintenanceStatus.PROGRAMADO },
+        where: { status: 'PROGRAMADO' },
       }),
       this.prisma.license.count({
         where: {
-          isActive: true,
           expiresAt: { lte: in90Days, gte: now },
         },
       }),
