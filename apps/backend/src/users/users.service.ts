@@ -3,6 +3,11 @@ import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
+function stripHash<T extends { passwordHash?: string }>(user: T): Omit<T, 'passwordHash'> {
+  const { passwordHash: _, ...rest } = user;
+  return rest as Omit<T, 'passwordHash'>;
+}
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
@@ -13,7 +18,7 @@ export class UsersService {
 
     const passwordHash = await argon2.hash(dto.password);
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         passwordHash,
@@ -26,38 +31,33 @@ export class UsersService {
         },
       },
       include: { roles: true },
-      // @ts-ignore — Prisma 5 types omit as never when include is present
-      omit: { passwordHash: true },
     });
+    return stripHash(user);
   }
 
   async findAll() {
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       include: { roles: true },
-      // @ts-ignore — Prisma 5 types omit as never when include is present
-      omit: { passwordHash: true },
       orderBy: { lastName: 'asc' },
     });
+    return users.map(stripHash);
   }
 
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: { roles: true, sedeAccess: { include: { sede: true } } },
-      // @ts-ignore — Prisma 5 types omit as never when include is present
-      omit: { passwordHash: true },
     });
     if (!user) throw new NotFoundException('Usuario no encontrado');
-    return user;
+    return stripHash(user);
   }
 
   async toggleActive(id: string) {
     const user = await this.findOne(id);
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { isActive: !user.isActive },
-      // @ts-ignore — Prisma 5 types omit as never when include is present
-      omit: { passwordHash: true },
     });
+    return stripHash(updated);
   }
 }

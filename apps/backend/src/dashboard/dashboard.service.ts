@@ -71,7 +71,7 @@ export class DashboardService {
       this.prisma.product.count({
         where: {
           isActive: true,
-          minimumStock: { not: null },
+          minimumStock: { gt: 0 },
           productStock: { some: {} },
         },
       }),
