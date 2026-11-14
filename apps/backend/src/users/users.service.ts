@@ -26,14 +26,16 @@ export class UsersService {
         },
       },
       include: { roles: true },
-      omit: { passwordHash: true } as any,
+      // @ts-ignore — Prisma 5 types omit as never when include is present
+      omit: { passwordHash: true },
     });
   }
 
   async findAll() {
     return this.prisma.user.findMany({
       include: { roles: true },
-      omit: { passwordHash: true } as any,
+      // @ts-ignore — Prisma 5 types omit as never when include is present
+      omit: { passwordHash: true },
       orderBy: { lastName: 'asc' },
     });
   }
@@ -42,7 +44,8 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: { roles: true, sedeAccess: { include: { sede: true } } },
-      omit: { passwordHash: true } as any,
+      // @ts-ignore — Prisma 5 types omit as never when include is present
+      omit: { passwordHash: true },
     });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     return user;
@@ -53,7 +56,8 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: { isActive: !user.isActive },
-      omit: { passwordHash: true } as any,
+      // @ts-ignore — Prisma 5 types omit as never when include is present
+      omit: { passwordHash: true },
     });
   }
 }

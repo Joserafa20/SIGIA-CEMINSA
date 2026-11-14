@@ -46,7 +46,7 @@ export class ReportsService {
 
     assets.forEach((a) => {
       ws.addRow({
-        code: a.code,
+        code: a.institutionalCode ?? a.plaque ?? '',
         name: a.name,
         category: a.category?.name ?? '',
         status: a.status,
