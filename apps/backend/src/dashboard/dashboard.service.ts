@@ -27,12 +27,12 @@ export class DashboardService {
         by: ['status'],
         _count: { id: true },
       }),
-      this.prisma.movement.findMany({
+      this.prisma.assetMovement.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
-          asset: { select: { name: true, code: true } },
-          requestedBy: { select: { name: true } },
+          asset: { select: { name: true, institutionalCode: true } },
+          requestedBy: { select: { firstName: true, lastName: true } },
         },
       }),
       this.prisma.transfer.count({
@@ -141,7 +141,7 @@ export class DashboardService {
 
   async getAlmacenTimeline(days = 30) {
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    const movements = await this.prisma.movement.groupBy({
+    const movements = await this.prisma.assetMovement.groupBy({
       by: ['movementType', 'createdAt'],
       where: { createdAt: { gte: since } },
       _count: { id: true },

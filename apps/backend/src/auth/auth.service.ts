@@ -87,6 +87,7 @@ export class AuthService {
     return this.prisma.user.findUnique({
       where: { id: userId },
       include: { roles: true, sedeAccess: { include: { sede: true } } },
+      // @ts-ignore — Prisma 5 types omit as never when include is present
       omit: { passwordHash: true },
     });
   }

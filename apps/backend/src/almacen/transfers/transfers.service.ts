@@ -56,22 +56,18 @@ export class TransfersService {
     const transfer = await this.prisma.$transaction(async (tx) => {
       const tr = await tx.transfer.create({
         data: {
-          fromSedeId: dto.fromSedeId,
-          toSedeId: dto.toSedeId,
+          originSedeId: dto.fromSedeId,
+          destinationSedeId: dto.toSedeId,
           status: TransferStatus.DESPACHADO,
-          requestedById,
           documentRef: dto.documentRef,
           notes: dto.notes,
-          assets: { connect: dto.assetIds.map((id) => ({ id })) },
         },
         include: {
-          fromSede: true,
-          toSede: true,
-          assets: { select: { id: true, name: true, plaque: true } },
+          originSede: true,
+          destinationSede: true,
         },
       });
 
-      // Mark assets as EN_TRANSITO and create movement records
       await tx.asset.updateMany({
         where: { id: { in: dto.assetIds } },
         data: { status: AssetStatus.EN_TRANSITO },
@@ -80,7 +76,7 @@ export class TransfersService {
       await tx.assetMovement.createMany({
         data: dto.assetIds.map((assetId) => ({
           assetId,
-          movementType: MovementType.TRASLADO_SALIDA,
+          movementType: MovementType.SALIDA_TRASLADO,
           quantity: 1,
           requestedById,
           documentRef: dto.documentRef,
@@ -107,11 +103,7 @@ export class TransfersService {
   async advanceStatus(transferId: string, userId: string) {
     const transfer = await this.prisma.transfer.findUnique({
       where: { id: transferId },
-      include: {
-        assets: { select: { id: true, name: true, plaque: true } },
-        fromSede: true,
-        toSede: true,
-      },
+      include: { originSede: true, destinationSede: true },
     });
 
     if (!transfer) throw new NotFoundException('Traslado no encontrado');
@@ -123,7 +115,11 @@ export class TransfersService {
       );
     }
 
-    const assetIds = transfer.assets.map((a) => a.id);
+    const assetMovements = await this.prisma.assetMovement.findMany({
+      where: { transferId, movementType: MovementType.SALIDA_TRASLADO },
+      select: { assetId: true },
+    });
+    const assetIds = assetMovements.map((m) => m.assetId);
 
     const updated = await this.prisma.$transaction(async (tx) => {
       const tr = await tx.transfer.update({
@@ -132,20 +128,19 @@ export class TransfersService {
           status: nextStatus,
           ...(nextStatus === TransferStatus.RECIBIDO && { receivedAt: new Date() }),
         },
-        include: { fromSede: true, toSede: true },
+        include: { originSede: true, destinationSede: true },
       });
 
       if (nextStatus === TransferStatus.RECIBIDO) {
-        // Move assets to destination sede and restore status to BUENO
         await tx.asset.updateMany({
           where: { id: { in: assetIds } },
-          data: { sedeId: transfer.toSedeId, status: AssetStatus.BUENO },
+          data: { sedeId: transfer.destinationSedeId, status: AssetStatus.BUENO },
         });
 
         await tx.assetMovement.createMany({
           data: assetIds.map((assetId) => ({
             assetId,
-            movementType: MovementType.TRASLADO_ENTRADA,
+            movementType: MovementType.ENTRADA_TRASLADO,
             quantity: 1,
             requestedById: userId,
             documentRef: transfer.documentRef ?? undefined,
@@ -174,15 +169,17 @@ export class TransfersService {
   async findAll(sedeId?: string) {
     return this.prisma.transfer.findMany({
       where: sedeId
-        ? { OR: [{ fromSedeId: sedeId }, { toSedeId: sedeId }] }
+        ? { OR: [{ originSedeId: sedeId }, { destinationSedeId: sedeId }] }
         : {},
       include: {
-        fromSede: true,
-        toSede: true,
-        requestedBy: { select: { firstName: true, lastName: true } },
-        assets: { select: { id: true, name: true, plaque: true } },
+        originSede: true,
+        destinationSede: true,
+        movements: {
+          where: { movementType: MovementType.SALIDA_TRASLADO },
+          include: { asset: { select: { id: true, name: true, plaque: true } } },
+        },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { dispatchedAt: 'desc' },
     });
   }
 
@@ -190,16 +187,12 @@ export class TransfersService {
     const transfer = await this.prisma.transfer.findUnique({
       where: { id },
       include: {
-        fromSede: true,
-        toSede: true,
-        requestedBy: { select: { firstName: true, lastName: true, email: true } },
-        assets: {
+        originSede: true,
+        destinationSede: true,
+        movements: {
           include: {
-            category: true,
-            movements: {
-              where: { transferId: id },
-              include: { requestedBy: { select: { firstName: true, lastName: true } } },
-            },
+            asset: { include: { category: true } },
+            requestedBy: { select: { firstName: true, lastName: true, email: true } },
           },
         },
       },
@@ -211,7 +204,12 @@ export class TransfersService {
   async cancel(transferId: string, reason: string, userId: string) {
     const transfer = await this.prisma.transfer.findUnique({
       where: { id: transferId },
-      include: { assets: { select: { id: true } } },
+      include: {
+        movements: {
+          where: { movementType: MovementType.SALIDA_TRASLADO },
+          select: { assetId: true },
+        },
+      },
     });
 
     if (!transfer) throw new NotFoundException('Traslado no encontrado');
@@ -219,12 +217,12 @@ export class TransfersService {
       throw new ForbiddenException('No se puede cancelar un traslado ya recibido');
     }
 
-    const assetIds = transfer.assets.map((a) => a.id);
+    const assetIds = transfer.movements.map((m) => m.assetId);
 
     await this.prisma.$transaction(async (tx) => {
       await tx.transfer.update({
         where: { id: transferId },
-        data: { status: TransferStatus.CANCELADO, notes: reason },
+        data: { status: TransferStatus.RECHAZADO, rejectionReason: reason },
       });
 
       await tx.asset.updateMany({
