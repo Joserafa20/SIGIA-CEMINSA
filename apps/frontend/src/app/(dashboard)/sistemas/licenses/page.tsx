@@ -6,21 +6,24 @@ import api from '@/lib/api';
 
 interface License {
   id: string;
-  name: string;
+  productName: string;
   vendor: string | null;
-  licenseKey: string | null;
   expiresAt: string | null;
   seats: number | null;
-  status: string;
-  techAsset: { name: string } | null;
+  techAsset: {
+    asset: { name: string; plaque: string | null } | null;
+  } | null;
 }
 
-const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  ACTIVA: { label: 'Activa', color: 'bg-green-100 text-green-800' },
-  EXPIRADA: { label: 'Expirada', color: 'bg-red-100 text-red-800' },
-  POR_VENCER: { label: 'Por vencer', color: 'bg-yellow-100 text-yellow-800' },
-  CANCELADA: { label: 'Cancelada', color: 'bg-gray-100 text-gray-600' },
-};
+function getLicenseStatus(expiresAt: string | null): { label: string; color: string } {
+  if (!expiresAt) return { label: 'Perpetua', color: 'bg-blue-100 text-blue-800' };
+  const now = new Date();
+  const exp = new Date(expiresAt);
+  const daysLeft = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (daysLeft < 0) return { label: 'Expirada', color: 'bg-red-100 text-red-800' };
+  if (daysLeft <= 30) return { label: 'Por vencer', color: 'bg-yellow-100 text-yellow-800' };
+  return { label: 'Activa', color: 'bg-green-100 text-green-800' };
+}
 
 export default function LicensesPage() {
   const [licenses, setLicenses] = useState<License[]>([]);
@@ -36,11 +39,9 @@ export default function LicensesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Licencias</h1>
-          <p className="mt-1 text-sm text-gray-500">Licencias de software</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Licencias</h1>
+        <p className="mt-1 text-sm text-gray-500">Licencias de software</p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -71,15 +72,15 @@ export default function LicensesPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {licenses.map((l) => {
-                const st = STATUS_LABEL[l.status] ?? { label: l.status, color: 'bg-gray-100 text-gray-600' };
+                const st = getLicenseStatus(l.expiresAt);
                 return (
                   <tr key={l.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">{l.name}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{l.productName}</td>
                     <td className="px-4 py-3 text-gray-600">{l.vendor ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{l.techAsset?.name ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">{l.techAsset?.asset?.name ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{l.seats ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-500">
-                      {l.expiresAt ? new Date(l.expiresAt).toLocaleDateString('es-CO') : '—'}
+                      {l.expiresAt ? new Date(l.expiresAt).toLocaleDateString('es-CO') : 'Perpetua'}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${st.color}`}>{st.label}</span>

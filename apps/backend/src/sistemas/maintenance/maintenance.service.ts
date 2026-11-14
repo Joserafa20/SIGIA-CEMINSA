@@ -13,6 +13,18 @@ export class MaintenanceService {
     private audit: AuditService,
   ) {}
 
+  async findAll() {
+    return this.prisma.maintenance.findMany({
+      include: {
+        techAsset: {
+          include: { asset: { select: { name: true, plaque: true } } },
+        },
+        technician: { select: { firstName: true, lastName: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findByTechAsset(techAssetId: string) {
     return this.prisma.maintenance.findMany({
       where: { techAssetId },

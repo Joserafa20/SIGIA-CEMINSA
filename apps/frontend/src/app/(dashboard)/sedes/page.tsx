@@ -10,7 +10,7 @@ interface Sede {
   municipality: string | null;
   department: string | null;
   address: string | null;
-  active: boolean;
+  isActive: boolean;
 }
 
 export default function SedesPage() {
@@ -67,8 +67,8 @@ export default function SedesPage() {
                   <td className="px-4 py-3 text-gray-600">{s.department ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-600">{s.address ?? '—'}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${s.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                      {s.active ? 'Activa' : 'Inactiva'}
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${s.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                      {s.isActive ? 'Activa' : 'Inactiva'}
                     </span>
                   </td>
                 </tr>

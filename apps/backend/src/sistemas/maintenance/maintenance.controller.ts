@@ -17,6 +17,12 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class MaintenanceController {
   constructor(private maintenanceService: MaintenanceService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Listar todos los mantenimientos' })
+  findAll() {
+    return this.maintenanceService.findAll();
+  }
+
   @Get('scheduled')
   @ApiOperation({ summary: 'Mantenimientos programados pendientes' })
   findScheduled() {

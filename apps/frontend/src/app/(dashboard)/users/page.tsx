@@ -4,13 +4,17 @@ import { useEffect, useState } from 'react';
 import { Users } from 'lucide-react';
 import api from '@/lib/api';
 
+interface UserRole {
+  role: string;
+}
+
 interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: string;
-  active: boolean;
-  sede: { name: string } | null;
+  roles: UserRole[];
+  isActive: boolean;
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -70,13 +74,15 @@ export default function UsersPage() {
             <tbody className="divide-y divide-gray-100">
               {users.map((u) => (
                 <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{u.firstName} {u.lastName}</td>
                   <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                  <td className="px-4 py-3 text-gray-600">{ROLE_LABEL[u.role] ?? u.role}</td>
-                  <td className="px-4 py-3 text-gray-600">{u.sede?.name ?? '—'}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {u.roles.map((r) => ROLE_LABEL[r.role] ?? r.role).join(', ') || '—'}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">—</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${u.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                      {u.active ? 'Activo' : 'Inactivo'}
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                      {u.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                 </tr>

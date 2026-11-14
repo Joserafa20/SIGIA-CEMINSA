@@ -10,6 +10,17 @@ export class LicensesService {
     private audit: AuditService,
   ) {}
 
+  async findAll() {
+    return this.prisma.license.findMany({
+      include: {
+        techAsset: {
+          include: { asset: { select: { name: true, plaque: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findByTechAsset(techAssetId: string) {
     return this.prisma.license.findMany({
       where: { techAssetId },

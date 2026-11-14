@@ -17,6 +17,17 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class MovementsController {
   constructor(private movementsService: MovementsService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Movimientos recientes (alias de /recent)' })
+  @ApiQuery({ name: 'sedeId', required: false })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  findAll(
+    @Query('sedeId') sedeId?: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.movementsService.findRecent(sedeId, limit ? Number(limit) : 50);
+  }
+
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.ALMACENISTA)
   @ApiOperation({ summary: 'Registrar movimiento de activo' })

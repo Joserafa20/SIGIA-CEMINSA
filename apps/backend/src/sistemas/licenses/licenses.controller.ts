@@ -17,6 +17,12 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class LicensesController {
   constructor(private licensesService: LicensesService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Listar todas las licencias' })
+  findAll() {
+    return this.licensesService.findAll();
+  }
+
   @Get('expiring')
   @ApiOperation({ summary: 'Licencias que vencen en los próximos N días (default 30)' })
   @ApiQuery({ name: 'days', required: false, type: Number })

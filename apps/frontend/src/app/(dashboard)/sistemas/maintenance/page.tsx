@@ -8,16 +8,18 @@ interface Maintenance {
   id: string;
   type: string;
   status: string;
-  scheduledAt: string;
-  completedAt: string | null;
-  description: string | null;
-  techAsset: { name: string } | null;
-  technician: { name: string } | null;
+  scheduledDate: string | null;
+  executedDate: string | null;
+  description: string;
+  techAsset: {
+    asset: { name: string; plaque: string | null } | null;
+  } | null;
+  technician: { firstName: string; lastName: string } | null;
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   PROGRAMADO: { label: 'Programado', color: 'bg-blue-100 text-blue-800' },
-  EN_PROCESO: { label: 'En proceso', color: 'bg-yellow-100 text-yellow-800' },
+  EN_EJECUCION: { label: 'En ejecución', color: 'bg-yellow-100 text-yellow-800' },
   COMPLETADO: { label: 'Completado', color: 'bg-green-100 text-green-800' },
   CANCELADO: { label: 'Cancelado', color: 'bg-red-100 text-red-800' },
 };
@@ -41,11 +43,9 @@ export default function MaintenancePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mantenimientos</h1>
-          <p className="mt-1 text-sm text-gray-500">Mantenimientos de equipos TIC</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Mantenimientos</h1>
+        <p className="mt-1 text-sm text-gray-500">Mantenimientos de equipos TIC</p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -78,11 +78,13 @@ export default function MaintenancePage() {
                 const st = STATUS_LABEL[m.status] ?? { label: m.status, color: 'bg-gray-100 text-gray-600' };
                 return (
                   <tr key={m.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">{m.techAsset?.name ?? '—'}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{m.techAsset?.asset?.name ?? '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{TYPE_LABEL[m.type] ?? m.type}</td>
-                    <td className="px-4 py-3 text-gray-600">{m.technician?.name ?? '—'}</td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {m.technician ? `${m.technician.firstName} ${m.technician.lastName}` : '—'}
+                    </td>
                     <td className="px-4 py-3 text-gray-500">
-                      {new Date(m.scheduledAt).toLocaleDateString('es-CO')}
+                      {m.scheduledDate ? new Date(m.scheduledDate).toLocaleDateString('es-CO') : '—'}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${st.color}`}>{st.label}</span>
