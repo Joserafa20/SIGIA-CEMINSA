@@ -276,7 +276,7 @@ export class ReportsService {
       this.prisma.techAsset.count(),
       this.prisma.ticket.count({ where: { status: { in: ['ABIERTO', 'EN_PROGRESO'] as any } } }),
       this.prisma.maintenance.count({ where: { status: 'PROGRAMADO' as any } }),
-      this.prisma.license.count({ where: { isActive: true, expiresAt: { lte: in90Days, gte: now } } }),
+      this.prisma.license.count({ where: { expiresAt: { lte: in90Days, gte: now } } }),
     ]);
 
     return {
