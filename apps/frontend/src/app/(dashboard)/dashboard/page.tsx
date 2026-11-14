@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api';
 
 interface AlmacenStats {
   totalAssets: number;
@@ -67,9 +68,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/v1/dashboard')
-      .then((r) => r.json())
-      .then(setSummary)
+    api.get('/v1/dashboard')
+      .then((r) => setSummary(r.data))
+      .catch(() => setSummary(null))
       .finally(() => setLoading(false));
   }, []);
 
