@@ -2,8 +2,48 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, Printer } from 'lucide-react';
 import api from '@/lib/api';
+
+function printSticker(asset: any) {
+  const code = asset.institutionalCode ?? asset.plaque ?? asset.id;
+  const qrData = encodeURIComponent(code);
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${qrData}&format=svg`;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Sticker — ${asset.name}</title>
+<style>
+  @page { size: 90mm 50mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  body { width: 90mm; height: 50mm; display: flex; align-items: center; padding: 4mm; gap: 4mm; background: white; }
+  .qr { flex-shrink: 0; width: 40mm; height: 40mm; }
+  .qr img { width: 100%; height: 100%; }
+  .info { flex: 1; overflow: hidden; }
+  .org { font-size: 7pt; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2mm; }
+  .name { font-size: 9pt; font-weight: bold; color: #111; line-height: 1.2; margin-bottom: 2mm; word-break: break-word; }
+  .row { font-size: 7pt; color: #444; margin-bottom: 1mm; }
+  .label { color: #888; }
+</style>
+</head><body>
+<div class="qr"><img src="${qrUrl}" alt="QR" /></div>
+<div class="info">
+  <div class="org">ESE CEMINSA</div>
+  <div class="name">${asset.name}</div>
+  ${asset.institutionalCode ? `<div class="row"><span class="label">Código: </span>${asset.institutionalCode}</div>` : ''}
+  ${asset.plaque ? `<div class="row"><span class="label">Placa: </span>${asset.plaque}</div>` : ''}
+  ${asset.serial ? `<div class="row"><span class="label">Serial: </span>${asset.serial}</div>` : ''}
+  ${asset.sede?.name ? `<div class="row"><span class="label">Sede: </span>${asset.sede.name}</div>` : ''}
+  ${asset.brand ? `<div class="row"><span class="label">Marca: </span>${asset.brand}${asset.model ? ' ' + asset.model : ''}</div>` : ''}
+</div>
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=400,height=320');
+  if (!w) return;
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  w.onload = () => { setTimeout(() => { w.print(); w.close(); }, 500); };
+}
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   EXCELENTE: { label: 'Excelente', color: 'bg-green-100 text-green-800' },
@@ -69,6 +109,13 @@ export default function AssetDetailPage() {
         <span className={`rounded-full px-3 py-1 text-sm font-medium ${status.color}`}>
           {status.label}
         </span>
+        <button
+          onClick={() => printSticker(asset)}
+          className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+        >
+          <Printer className="h-4 w-4" />
+          Sticker QR
+        </button>
       </div>
 
       {/* Details grid */}

@@ -39,13 +39,12 @@ export default function NewTechAssetPage() {
   });
 
   useEffect(() => {
-    Promise.all([
-      api.get('/v1/sedes'),
-      api.get('/v1/almacen/assets?limit=200'),
-    ]).then(([sds, ass]) => {
-      setSedes(sds.data);
-      // Only assets without a TIC record
-      setAssets(ass.data.data.filter((a: any) => !a.techAsset));
+    api.get('/v1/sedes').then((r) => {
+      setSedes(Array.isArray(r.data) ? r.data : r.data.data ?? []);
+    });
+    api.get('/v1/almacen/assets?limit=200').then((r) => {
+      const list = Array.isArray(r.data) ? r.data : r.data.data ?? [];
+      setAssets(list.filter((a: any) => !a.techAsset));
     });
   }, []);
 

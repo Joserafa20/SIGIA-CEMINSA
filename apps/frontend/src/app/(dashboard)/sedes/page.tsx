@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Building2 } from 'lucide-react';
+import Link from 'next/link';
 import api from '@/lib/api';
 
 interface Sede {
@@ -32,6 +33,12 @@ export default function SedesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Sedes</h1>
           <p className="mt-1 text-sm text-gray-500">Sedes de la institución</p>
         </div>
+        <Link
+          href="/sedes/new"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          + Nueva sede
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
