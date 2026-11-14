@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import api from '@/lib/api';
 
 interface Lot {
   id: string;
@@ -52,9 +53,8 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/v1/farmacia/products/${id}`)
-      .then((r) => r.json())
-      .then(setProduct)
+    api.get(`/v1/farmacia/products/${id}`)
+      .then((r) => setProduct(r.data))
       .finally(() => setLoading(false));
   }, [id]);
 

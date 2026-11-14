@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import api from '@/lib/api';
 
 interface Product {
   id: string;
@@ -47,8 +48,8 @@ export default function FarmaciaProductsPage() {
       if (belowMinimum) params.set('belowMinimum', 'true');
       if (isControlled !== undefined) params.set('isControlled', String(isControlled));
 
-      const res = await fetch(`/api/v1/farmacia/products?${params}`);
-      const json = await res.json();
+      const res = await api.get(`/v1/farmacia/products?${params}`);
+      const json = res.data;
       setProducts(json.data ?? []);
       setTotal(json.meta?.total ?? 0);
     } finally {

@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 const schema = z.object({
   code: z.string().min(1),
@@ -41,15 +42,8 @@ export default function NewProductPage() {
   });
 
   const onSubmit = async (data: FormValues) => {
-    const res = await fetch('/api/v1/farmacia/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (res.ok) {
-      const product = await res.json();
-      router.push(`/farmacia/products/${product.id}`);
-    }
+    const res = await api.post('/v1/farmacia/products', data);
+    router.push(`/farmacia/products/${res.data.id}`);
   };
 
   const field = (label: string, name: keyof FormValues, placeholder?: string) => (

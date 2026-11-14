@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import api from '@/lib/api';
 
 interface Product { id: string; code: string; activePrinciple: string; }
 interface Sede { id: string; name: string; }
@@ -29,10 +30,10 @@ export default function DispensePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/v1/sedes').then((r) => r.json()),
-      fetch('/api/v1/farmacia/products?limit=200').then((r) => r.json()),
+      api.get('/v1/sedes').then((r) => r.data),
+      api.get('/v1/farmacia/products?limit=200').then((r) => r.data),
     ]).then(([s, p]) => {
-      setSedes(s.data ?? s);
+      setSedes(Array.isArray(s) ? s : s.data ?? []);
       setProducts(p.data ?? []);
     });
   }, []);
@@ -42,24 +43,16 @@ export default function DispensePage() {
     setError('');
     setSubmitting(true);
     try {
-      const res = await fetch('/api/v1/farmacia/stock/dispense', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId,
-          sedeId,
-          quantity: Number(quantity),
-          documentRef: documentRef || undefined,
-          notes: notes || undefined,
-        }),
+      const res = await api.post('/v1/farmacia/stock/dispense', {
+        productId,
+        sedeId,
+        quantity: Number(quantity),
+        documentRef: documentRef || undefined,
+        notes: notes || undefined,
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message ?? 'Error al dispensar');
-      }
-      setResult(await res.json());
+      setResult(res.data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message ?? err.message ?? 'Error al dispensar');
     } finally {
       setSubmitting(false);
     }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import api from '@/lib/api';
 
 interface Product { id: string; code: string; activePrinciple: string; }
 interface Sede { id: string; name: string; }
@@ -39,10 +40,10 @@ export default function StockEntryPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/v1/sedes').then((r) => r.json()),
-      fetch('/api/v1/farmacia/products?limit=200').then((r) => r.json()),
+      api.get('/v1/sedes').then((r) => r.data),
+      api.get('/v1/farmacia/products?limit=200').then((r) => r.data),
     ]).then(([s, p]) => {
-      setSedes(s.data ?? s);
+      setSedes(Array.isArray(s) ? s : s.data ?? []);
       setProducts(p.data ?? []);
     });
   }, []);
@@ -73,18 +74,10 @@ export default function StockEntryPage() {
           unitValue: item.unitValue ? Number(item.unitValue) : undefined,
         })),
       };
-      const res = await fetch('/api/v1/farmacia/stock/entry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message ?? 'Error al registrar ingreso');
-      }
+      await api.post('/v1/farmacia/stock/entry', payload);
       router.push('/farmacia/products');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message ?? err.message ?? 'Error al registrar ingreso');
     } finally {
       setSubmitting(false);
     }
