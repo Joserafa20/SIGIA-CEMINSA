@@ -2,8 +2,43 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Printer } from 'lucide-react';
 import api from '@/lib/api';
+
+function printSticker(asset: Asset) {
+  const code = asset.institutionalCode ?? asset.plaque ?? asset.id;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(code)}&format=svg`;
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Sticker — ${asset.name}</title>
+<style>
+  @page { size: 90mm 50mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  body { width: 90mm; height: 50mm; display: flex; align-items: center; padding: 4mm; gap: 4mm; background: white; }
+  .qr { flex-shrink: 0; width: 40mm; height: 40mm; }
+  .qr img { width: 100%; height: 100%; }
+  .info { flex: 1; overflow: hidden; }
+  .org { font-size: 7pt; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2mm; }
+  .name { font-size: 9pt; font-weight: bold; color: #111; line-height: 1.2; margin-bottom: 2mm; word-break: break-word; }
+  .row { font-size: 7pt; color: #444; margin-bottom: 1mm; }
+  .label { color: #888; }
+</style></head><body>
+<div class="qr"><img src="${qrUrl}" alt="QR" /></div>
+<div class="info">
+  <div class="org">ESE CEMINSA</div>
+  <div class="name">${asset.name}</div>
+  ${asset.institutionalCode ? `<div class="row"><span class="label">Código: </span>${asset.institutionalCode}</div>` : ''}
+  ${asset.plaque ? `<div class="row"><span class="label">Placa: </span>${asset.plaque}</div>` : ''}
+  ${asset.serial ? `<div class="row"><span class="label">Serial: </span>${asset.serial}</div>` : ''}
+  ${asset.sede?.name ? `<div class="row"><span class="label">Sede: </span>${asset.sede.name}</div>` : ''}
+  ${asset.brand ? `<div class="row"><span class="label">Marca: </span>${asset.brand}</div>` : ''}
+</div></body></html>`;
+  const w = window.open('', '_blank', 'width=400,height=320');
+  if (!w) return;
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  w.onload = () => { setTimeout(() => { w.print(); w.close(); }, 500); };
+}
 
 interface Asset {
   id: string;
@@ -107,6 +142,7 @@ export default function AssetsPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Categoría</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Sede</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Estado</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -129,6 +165,15 @@ export default function AssetsPage() {
                       <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status.color}`}>
                         {status.label}
                       </span>
+                    </td>
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => printSticker(asset)}
+                        title="Imprimir sticker QR"
+                        className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                      >
+                        <Printer className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 );
