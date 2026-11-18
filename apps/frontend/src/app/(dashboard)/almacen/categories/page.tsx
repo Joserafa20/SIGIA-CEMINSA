@@ -16,6 +16,7 @@ interface Category {
 const ASSET_TYPE_LABEL: Record<string, string> = {
   TANGIBLE: 'Tangible',
   INTANGIBLE: 'Intangible',
+  BIENES_CONSUMO: 'Bienes de Consumo',
 };
 
 const empty = { code: '', name: '', description: '', assetType: 'TANGIBLE' };
@@ -115,6 +116,7 @@ export default function CategoriesPage() {
               >
                 <option value="TANGIBLE">Tangible</option>
                 <option value="INTANGIBLE">Intangible</option>
+                <option value="BIENES_CONSUMO">Bienes de Consumo</option>
               </select>
             </div>
             <div>

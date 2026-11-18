@@ -6,6 +6,9 @@
   "scripts": {
     "build": "nest build",
     "prisma:generate": "npx prisma@5 generate --schema=../../packages/database/prisma/schema.prisma",
+    "prisma:push": "npx prisma@5 db push --schema=../../packages/database/prisma/schema.prisma --accept-data-loss",
+    "seed:categories": "ts-node -r tsconfig-paths/register src/seed-categories.ts",
+    "build:full": "npm run prisma:push && npm run prisma:generate && npm run seed:categories && npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "dev": "nest start --watch",

@@ -42,6 +42,7 @@ enum AssetStatus {
 enum AssetType {
   TANGIBLE
   INTANGIBLE
+  BIENES_CONSUMO
 }
 
 enum MovementType {
