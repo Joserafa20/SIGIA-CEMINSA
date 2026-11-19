@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -106,9 +107,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          ¿Problemas para ingresar? Contacta al administrador TIC.
-        </p>
+        <div className="mt-6 text-center space-y-2">
+          <Link href="/forgot-password" className="block text-sm text-primary hover:underline">
+            ¿Olvidaste tu contraseña?
+          </Link>
+          <p className="text-xs text-muted-foreground">
+            ¿Otros problemas? Contacta al administrador TIC.
+          </p>
+        </div>
       </div>
     </div>
   );

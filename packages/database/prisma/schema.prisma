@@ -123,9 +123,11 @@ model User {
   lastName     String
   documentId   String?  @unique
   phone        String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isActive          Boolean   @default(true)
+  resetToken        String?   @unique
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   roles         UserRole[]
   sedeAccess    UserSedeAccess[]
