@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -20,13 +21,16 @@ interface NavItem {
   href?: string;
   icon: React.ElementType;
   children?: { label: string; href: string }[];
+  roles?: string[]; // undefined = visible para todos
 }
 
+// Roles que pueden ver cada sección. undefined = sin restricción.
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   {
     label: 'Almacén',
     icon: Package,
+    roles: ['SUPER_ADMIN', 'ALMACENISTA', 'CONTROL_INTERNO', 'CONTABILIDAD'],
     children: [
       { label: 'Activos', href: '/almacen/assets' },
       { label: 'Categorías', href: '/almacen/categories' },
@@ -37,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Farmacia',
     icon: Pill,
+    roles: ['SUPER_ADMIN', 'REGENTE_FARMACIA', 'CONTROL_INTERNO', 'CONTABILIDAD'],
     children: [
       { label: 'Productos', href: '/farmacia/products' },
       { label: 'Ingreso stock', href: '/farmacia/stock/entry' },
@@ -46,6 +51,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Sistemas',
     icon: Monitor,
+    roles: ['SUPER_ADMIN', 'ADMIN_TIC', 'CONTROL_INTERNO'],
     children: [
       { label: 'Equipos', href: '/sistemas/assets' },
       { label: 'Licencias', href: '/sistemas/licenses' },
@@ -53,13 +59,36 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Tickets', href: '/sistemas/tickets' },
     ],
   },
-  { label: 'Sedes', href: '/sedes', icon: Building2 },
-  { label: 'Usuarios', href: '/users', icon: Users },
+  {
+    label: 'Sedes',
+    href: '/sedes',
+    icon: Building2,
+    roles: ['SUPER_ADMIN', 'ADMIN_TIC', 'CONTROL_INTERNO'],
+  },
+  {
+    label: 'Usuarios',
+    href: '/users',
+    icon: Users,
+    roles: ['SUPER_ADMIN'],
+  },
   { label: 'Reportes', href: '/reportes', icon: FileText },
 ];
 
+function getUserRoles(session: any): string[] {
+  const raw = (session as any)?.roles ?? session?.user?.roles ?? [];
+  return raw.map((r: any) => (typeof r === 'string' ? r : r.role));
+}
+
+function canSee(item: NavItem, userRoles: string[]): boolean {
+  if (!item.roles) return true;
+  if (userRoles.includes('SUPER_ADMIN')) return true;
+  return item.roles.some((r) => userRoles.includes(r));
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const userRoles = getUserRoles(session);
   const [openGroups, setOpenGroups] = useState<string[]>(['Almacén']);
 
   const toggleGroup = (label: string) => {
@@ -83,7 +112,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-4">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => canSee(item, userRoles)).map((item) => {
           if (item.href) {
             const active = pathname === item.href;
             return (
